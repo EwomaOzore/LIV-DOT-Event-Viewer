@@ -1,4 +1,4 @@
-import { useMemo, type ReactNode } from 'react';
+import { useMemo, type ReactNode } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -8,34 +8,38 @@ import {
   Switch,
   Text,
   View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
-import { SCENARIO_LABELS, SCENARIO_ORDER } from '../eventViewer/scenarios';
-import type { ScenarioId, EventDetail, ViewerPresentation } from '../eventViewer/types';
-import { useEventViewer } from '../eventViewer/useEventViewer';
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { StatusBar } from "expo-status-bar";
+import { SCENARIO_LABELS, SCENARIO_ORDER } from "../eventViewer/scenarios";
+import type {
+  ScenarioId,
+  EventDetail,
+  ViewerPresentation,
+} from "../eventViewer/types";
+import { useEventViewer } from "../eventViewer/useEventViewer";
 
 const C = {
-  bg: '#0c0c0f',
-  surface: '#16161d',
-  border: '#2a2a34',
-  text: '#f4f4f6',
-  muted: '#9898a8',
-  accent: '#8b7cff',
-  live: '#ff3d5c',
-  ok: '#3ecf8e',
-  warn: '#ffb020',
+  bg: "#0c0c0f",
+  surface: "#16161d",
+  border: "#2a2a34",
+  text: "#f4f4f6",
+  muted: "#9898a8",
+  accent: "#8b7cff",
+  live: "#ff3d5c",
+  ok: "#3ecf8e",
+  warn: "#ffb020",
 };
 
 function formatStart(dateIso: string): string {
   try {
     const d = new Date(dateIso);
     return new Intl.DateTimeFormat(undefined, {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
     }).format(d);
   } catch {
     return dateIso;
@@ -47,7 +51,10 @@ type Props = {
   onChangeScenario: (s: ScenarioId) => void;
 };
 
-export function EventViewerScreen({ scenario, onChangeScenario }: Props) {
+export function EventViewerScreen({
+  scenario,
+  onChangeScenario,
+}: Readonly<Props>) {
   const {
     presentation,
     refresh,
@@ -60,26 +67,41 @@ export function EventViewerScreen({ scenario, onChangeScenario }: Props) {
 
   const body = useMemo(
     () => <PresentationBody presentation={presentation} onRetry={refresh} />,
-    [presentation, refresh]
+    [presentation, refresh],
   );
 
+  /** Vertically center sparse states between header and dev tray; keep event detail top-aligned. */
+  const centerScrollContent =
+    presentation.kind === "loading" ||
+    presentation.kind === "offline" ||
+    presentation.kind === "request_failed";
+
   return (
-    <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={styles.safe} edges={["top", "left", "right"]}>
       <StatusBar style="light" />
       <View style={styles.header}>
         <Text style={styles.brand}>LIV DOT</Text>
         <View style={styles.headerSpacer} />
         {isRefreshing ? <ActivityIndicator color={C.accent} /> : null}
         {!isOnline || simulateOffline ? (
-          <Text style={styles.offlinePill}>{simulateOffline ? 'Offline (demo)' : 'No network'}</Text>
+          <Text style={styles.offlinePill}>
+            {simulateOffline ? "Offline (demo)" : "No network"}
+          </Text>
         ) : null}
       </View>
 
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          centerScrollContent && styles.scrollContentCentered,
+        ]}
         refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={refresh} tintColor={C.accent} />
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={refresh}
+            tintColor={C.accent}
+          />
         }
       >
         {body}
@@ -87,14 +109,23 @@ export function EventViewerScreen({ scenario, onChangeScenario }: Props) {
 
       <View style={styles.devTray}>
         <Text style={styles.devTitle}>Assessment demo — pick a scenario</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsRow}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.chipsRow}
+        >
           {SCENARIO_ORDER.map((id) => (
             <Pressable
               key={id}
               onPress={() => onChangeScenario(id)}
               style={[styles.chip, scenario === id && styles.chipActive]}
             >
-              <Text style={[styles.chipText, scenario === id && styles.chipTextActive]}>
+              <Text
+                style={[
+                  styles.chipText,
+                  scenario === id && styles.chipTextActive,
+                ]}
+              >
                 {SCENARIO_LABELS[id]}
               </Text>
             </Pressable>
@@ -105,11 +136,13 @@ export function EventViewerScreen({ scenario, onChangeScenario }: Props) {
           <Switch
             value={simulateOffline}
             onValueChange={setSimulateOffline}
-            trackColor={{ false: '#333', true: C.accent }}
+            trackColor={{ false: "#333", true: C.accent }}
           />
         </View>
         <Pressable style={styles.failButton} onPress={simulateFailedRefresh}>
-          <Text style={styles.failButtonText}>Force next refresh to fail (503)</Text>
+          <Text style={styles.failButtonText}>
+            Force next refresh to fail (503)
+          </Text>
         </Pressable>
       </View>
     </SafeAreaView>
@@ -119,20 +152,22 @@ export function EventViewerScreen({ scenario, onChangeScenario }: Props) {
 function PresentationBody({
   presentation,
   onRetry,
-}: {
+}: Readonly<{
   presentation: ViewerPresentation;
   onRetry: () => void;
-}) {
+}>) {
   switch (presentation.kind) {
-    case 'loading':
+    case "loading":
       return (
         <View style={styles.centerBlock}>
           <ActivityIndicator size="large" color={C.accent} />
           <Text style={styles.loadingText}>Loading event…</Text>
-          <Text style={styles.hint}>Slow networks stay on this state; pull to refresh after loading.</Text>
+          <Text style={styles.hint}>
+            Slow networks stay on this state; pull to refresh after loading.
+          </Text>
         </View>
       );
-    case 'offline':
+    case "offline":
       return (
         <View style={styles.card}>
           <Text style={styles.cardTitle}>You are offline</Text>
@@ -142,7 +177,7 @@ function PresentationBody({
           </Pressable>
         </View>
       );
-    case 'request_failed':
+    case "request_failed":
       return (
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Something went wrong</Text>
@@ -152,7 +187,7 @@ function PresentationBody({
           </Pressable>
         </View>
       );
-    case 'need_purchase':
+    case "need_purchase":
       return (
         <EventChrome event={presentation.event}>
           <View style={styles.bannerMuted}>
@@ -166,14 +201,14 @@ function PresentationBody({
           </Pressable>
         </EventChrome>
       );
-    case 'verification_pending':
+    case "verification_pending":
       return (
         <EventChrome event={presentation.event}>
           <View style={[styles.bannerMuted, styles.bannerPending]}>
             <Text style={styles.bannerTitle}>Confirming your access…</Text>
             <Text style={styles.bannerBody}>
-              Payment is processing or your ticket is syncing. This usually takes a few seconds; we
-              will enable playback automatically.
+              Payment is processing or your ticket is syncing. This usually
+              takes a few seconds; we will enable playback automatically.
             </Text>
             <ActivityIndicator color={C.warn} style={{ marginTop: 12 }} />
           </View>
@@ -182,14 +217,16 @@ function PresentationBody({
           </Pressable>
         </EventChrome>
       );
-    case 'verification_failed':
+    case "verification_failed":
       return (
         <EventChrome event={presentation.event}>
           <View style={styles.bannerWarn}>
-            <Text style={styles.bannerTitle}>We could not verify your ticket</Text>
+            <Text style={styles.bannerTitle}>
+              We could not verify your ticket
+            </Text>
             <Text style={styles.bannerBody}>
-              Your purchase may have failed or this account does not match the order. Check your email
-              or try restoring purchases.
+              Your purchase may have failed or this account does not match the
+              order. Check your email or try restoring purchases.
             </Text>
           </View>
           <Pressable style={styles.primaryBtn} onPress={onRetry}>
@@ -197,19 +234,19 @@ function PresentationBody({
           </Pressable>
         </EventChrome>
       );
-    case 'upcoming':
+    case "upcoming":
       return (
         <EventChrome event={presentation.event}>
           <View style={styles.bannerMuted}>
             <Text style={styles.bannerTitle}>Event has not started</Text>
             <Text style={styles.bannerBody}>
-              The broadcast begins at {formatStart(presentation.event.startsAt)}. You can wait here —
-              we will notify you when doors open.
+              The broadcast begins at {formatStart(presentation.event.startsAt)}
+              . You can wait here — we will notify you when doors open.
             </Text>
           </View>
         </EventChrome>
       );
-    case 'live_ready':
+    case "live_ready":
       return (
         <EventChrome event={presentation.event}>
           <View style={styles.player}>
@@ -219,8 +256,8 @@ function PresentationBody({
             </View>
             <Text style={styles.playerHint}>Playback area (demo)</Text>
             <Text style={styles.playerSub}>
-              In production this mounts the player; here we only communicate that the stream is
-              authorized and ready.
+              In production this mounts the player; here we only communicate
+              that the stream is authorized and ready.
             </Text>
             <Pressable style={styles.playCircle}>
               <Text style={styles.playIcon}>▶</Text>
@@ -228,7 +265,7 @@ function PresentationBody({
           </View>
         </EventChrome>
       );
-    case 'live_unavailable':
+    case "live_unavailable":
       return (
         <EventChrome event={presentation.event}>
           <View style={styles.bannerWarn}>
@@ -240,7 +277,7 @@ function PresentationBody({
           </Pressable>
         </EventChrome>
       );
-    case 'replay':
+    case "replay":
       return (
         <EventChrome event={presentation.event}>
           <View style={styles.player}>
@@ -257,14 +294,14 @@ function PresentationBody({
           </View>
         </EventChrome>
       );
-    case 'ended_no_replay':
+    case "ended_no_replay":
       return (
         <EventChrome event={presentation.event}>
           <View style={styles.bannerMuted}>
             <Text style={styles.cardTitle}>Event has ended</Text>
             <Text style={styles.cardBody}>
               {presentation.event.playback.liveUnavailableReason ??
-                'There is no replay available for this event.'}
+                "There is no replay available for this event."}
             </Text>
           </View>
         </EventChrome>
@@ -274,7 +311,10 @@ function PresentationBody({
   }
 }
 
-function EventChrome({ event, children }: { event: EventDetail; children: ReactNode }) {
+function EventChrome({
+  event,
+  children,
+}: Readonly<{ event: EventDetail; children: ReactNode }>) {
   return (
     <View>
       <View style={styles.hero}>
@@ -293,8 +333,8 @@ const styles = StyleSheet.create({
     backgroundColor: C.bg,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 20,
     paddingBottom: 8,
     gap: 12,
@@ -302,7 +342,7 @@ const styles = StyleSheet.create({
   brand: {
     color: C.text,
     fontSize: 13,
-    fontWeight: '700',
+    fontWeight: "700",
     letterSpacing: 2,
   },
   headerSpacer: { flex: 1 },
@@ -310,25 +350,29 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     color: C.warn,
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: "600",
   },
-  scroll: { flex: 1 },
+  scroll: { flex: 1, paddingTop: 40 },
   scrollContent: { paddingHorizontal: 20, paddingBottom: 24 },
+  scrollContentCentered: {
+    flexGrow: 1,
+    justifyContent: "center",
+  },
   centerBlock: {
-    paddingVertical: 48,
-    alignItems: 'center',
+    paddingVertical: 24,
+    alignItems: "center",
   },
   loadingText: {
     marginTop: 16,
     color: C.text,
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   hint: {
     marginTop: 8,
     color: C.muted,
     fontSize: 13,
-    textAlign: 'center',
+    textAlign: "center",
     maxWidth: 280,
   },
   card: {
@@ -341,7 +385,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     color: C.text,
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: "700",
     marginBottom: 8,
   },
   cardBody: {
@@ -356,7 +400,7 @@ const styles = StyleSheet.create({
   eventTitle: {
     color: C.text,
     fontSize: 24,
-    fontWeight: '800',
+    fontWeight: "800",
     marginBottom: 6,
   },
   eventSubtitle: {
@@ -367,7 +411,7 @@ const styles = StyleSheet.create({
   eventMeta: {
     color: C.accent,
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   bannerMuted: {
     backgroundColor: C.surface,
@@ -378,20 +422,20 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   bannerPending: {
-    borderColor: 'rgba(255,176,32,0.35)',
+    borderColor: "rgba(255,176,32,0.35)",
   },
   bannerWarn: {
-    backgroundColor: 'rgba(255,61,92,0.12)',
+    backgroundColor: "rgba(255,61,92,0.12)",
     borderRadius: 14,
     padding: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255,61,92,0.35)',
+    borderColor: "rgba(255,61,92,0.35)",
     marginBottom: 16,
   },
   bannerTitle: {
     color: C.text,
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: "700",
     marginBottom: 8,
   },
   bannerBody: {
@@ -403,24 +447,25 @@ const styles = StyleSheet.create({
     backgroundColor: C.accent,
     borderRadius: 12,
     paddingVertical: 14,
-    alignItems: 'center',
+    paddingHorizontal: 16,
+    alignItems: "center",
   },
   primaryBtnText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   secondaryBtn: {
     borderRadius: 12,
     paddingVertical: 14,
-    alignItems: 'center',
+    alignItems: "center",
     borderWidth: 1,
     borderColor: C.border,
   },
   secondaryBtnText: {
     color: C.text,
     fontSize: 15,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   player: {
     backgroundColor: C.surface,
@@ -428,17 +473,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: C.border,
     aspectRatio: 16 / 9,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     padding: 16,
     marginBottom: 12,
   },
   liveBadgeRow: {
-    position: 'absolute',
+    position: "absolute",
     top: 12,
     left: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 6,
   },
   liveDot: {
@@ -450,20 +495,20 @@ const styles = StyleSheet.create({
   liveText: {
     color: C.live,
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: "800",
     letterSpacing: 1,
   },
   playerHint: {
     color: C.text,
     fontSize: 15,
-    fontWeight: '600',
-    textAlign: 'center',
+    fontWeight: "600",
+    textAlign: "center",
   },
   playerSub: {
     color: C.muted,
     fontSize: 12,
     lineHeight: 18,
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: 8,
     maxWidth: 260,
   },
@@ -472,15 +517,15 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: 'rgba(255,255,255,0.12)',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "rgba(255,255,255,0.12)",
+    alignItems: "center",
+    justifyContent: "center",
   },
   playIcon: { color: C.text, fontSize: 22, marginLeft: 4 },
   replayLabel: {
     color: C.ok,
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: "800",
     letterSpacing: 2,
     marginBottom: 8,
   },
@@ -493,7 +538,7 @@ const styles = StyleSheet.create({
   devTray: {
     borderTopWidth: 1,
     borderTopColor: C.border,
-    backgroundColor: '#08080a',
+    backgroundColor: "#08080a",
     paddingHorizontal: 16,
     paddingTop: 12,
     paddingBottom: 20,
@@ -501,16 +546,16 @@ const styles = StyleSheet.create({
   devTitle: {
     color: C.muted,
     fontSize: 11,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 10,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
     letterSpacing: 0.8,
   },
   chipsRow: {
     gap: 8,
     paddingBottom: 12,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
   },
   chip: {
     paddingHorizontal: 12,
@@ -524,26 +569,26 @@ const styles = StyleSheet.create({
   },
   chipActive: {
     borderColor: C.accent,
-    backgroundColor: 'rgba(139,124,255,0.2)',
+    backgroundColor: "rgba(139,124,255,0.2)",
   },
-  chipText: { color: C.muted, fontSize: 12, fontWeight: '600' },
+  chipText: { color: C.muted, fontSize: 12, fontWeight: "600" },
   chipTextActive: { color: C.text },
   devRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     marginBottom: 10,
   },
   devLabel: { color: C.muted, fontSize: 14 },
   failButton: {
     paddingVertical: 12,
-    alignItems: 'center',
+    alignItems: "center",
     borderRadius: 10,
-    backgroundColor: 'rgba(255,61,92,0.15)',
+    backgroundColor: "rgba(255,61,92,0.15)",
   },
   failButtonText: {
     color: C.live,
     fontSize: 13,
-    fontWeight: '700',
+    fontWeight: "700",
   },
 });

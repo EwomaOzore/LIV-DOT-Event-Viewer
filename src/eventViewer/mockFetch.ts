@@ -23,16 +23,23 @@ export async function mockFetchEventDetail(
   return MOCK_EVENTS[scenario];
 }
 
+/** RN/Hermes has no global `DOMException`; fetch abort uses `name === 'AbortError'`. */
+function abortError(): Error {
+  const e = new Error('Aborted');
+  e.name = 'AbortError';
+  return e;
+}
+
 function delay(ms: number, signal?: AbortSignal): Promise<void> {
   return new Promise((resolve, reject) => {
     if (signal?.aborted) {
-      reject(new DOMException('Aborted', 'AbortError'));
+      reject(abortError());
       return;
     }
     const t = setTimeout(resolve, ms);
     signal?.addEventListener('abort', () => {
       clearTimeout(t);
-      reject(new DOMException('Aborted', 'AbortError'));
+      reject(abortError());
     });
   });
 }
