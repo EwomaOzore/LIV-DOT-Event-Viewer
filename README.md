@@ -61,7 +61,3 @@ This repo uses **React hooks + a pure derivation function** instead of Redux/Zus
 - Real **DRM, entitlement tokens, and player errors** would add parallel substates; the presentation split here is meant to **scale to those concerns** without turning the screen into nested `if` soup.
 
 ---
-
-## Submitting
-
-Push this folder to **GitHub** or zip/upload to **Google Drive** with this README. Evaluators can run `npm install` and `npx expo start` as above.
